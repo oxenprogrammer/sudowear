@@ -1,0 +1,9 @@
+{
+  "name": "SudoWear",
+  "version": "1.0.0",
+  "description": "If you recognise the words on the tees then you are root.",
+  "main": "server.js",
+  "repository": "https://github.com/oxenprogrammer/sudowear.git",
+  "author": "oxenprogrammer <emmy1000okello@gmail.com>",
+  "license": "MIT"
+}
