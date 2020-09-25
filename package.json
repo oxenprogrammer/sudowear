@@ -1,5 +1,5 @@
 {
-  "name": "SudoWear",
+  "name": "sudowear",
   "version": "1.0.0",
   "description": "If you recognise the words on the tees then you are root.",
   "main": "server.js",
