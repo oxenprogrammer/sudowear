@@ -13,10 +13,13 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@admin-bro/express": "^3.0.0",
     "@types/jest": "^25.2.3",
+    "admin-bro": "^3.2.5",
     "bcryptjs": "^2.4.3",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "express-formidable": "^1.2.0",
     "express-validator": "^6.5.0",
     "gravatar": "^1.8.0",
     "jsonwebtoken": "^8.5.1",
