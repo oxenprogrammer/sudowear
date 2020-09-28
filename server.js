@@ -1,8 +1,12 @@
 const express = require('express');
 const users = require('./routes/api/users');
 const {router, adminBro} = require('./routes/api/admin-bro');
+const connectDB = require('./config/db');
 
 const app = express();
+
+// Connect to DB
+connectDB();
 
 // Middleware
 app.use(express.json({ extended: false }));
