@@ -11,11 +11,20 @@ const User = require("./../../models/User");
 
 const router = express.Router();
 
-// @route GET api/user
-// @desc GET All User route
-// @access Public
-router.get("/", [auth], (req, res) => {
-  return res.json({ users: [] });
+// @route    GET api/user
+// @desc     Get All User route
+// @access   Private
+router.get("/", [auth, ROLE('ADMIN')], async (req, res) => {
+  try {
+    const user = await User.find({ role: { $ne: "ADMIN" } }).select([
+      "-_id",
+      "-password",
+    ]);
+    return res.json(user);
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).json("Server error occurred");
+  }
 });
 
 // @route POST api/user
