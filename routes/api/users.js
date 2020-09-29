@@ -98,4 +98,29 @@ router.post(
   }
 );
 
+// @route    PUT api/user
+// @desc     Update User Role route
+// @access   Private
+
+router.patch('/', [auth, ROLE('ADMIN')], async (req, res) => {
+  const { email, role } = req.body;
+
+  try {
+      let user = await User.findOne({ email });
+      if (!user) {
+          return res.status(404).json({ errors: [{ msg: 'No user with this email'}]});
+      }
+
+      user = await User.findOneAndUpdate(
+          { email },
+          { $set: { role: role } },
+          { new: true }
+      );
+      return res.json(user);
+  } catch (error) {
+      console.error(error.message);
+      return res.status(500).send('Server error occurred');
+  }
+});
+
 module.exports = router;
