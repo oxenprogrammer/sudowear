@@ -98,7 +98,7 @@ router.post(
   }
 );
 
-// @route    PUT api/user
+// @route    PATCH api/user
 // @desc     Update User Role route
 // @access   Private
 
@@ -117,6 +117,27 @@ router.patch('/', [auth, ROLE('ADMIN')], async (req, res) => {
           { new: true }
       );
       return res.json(user);
+  } catch (error) {
+      console.error(error.message);
+      return res.status(500).send('Server error occurred');
+  }
+});
+
+// @route    DELETE api/user
+// @desc     Delete user with given email
+// @access   Private
+
+router.delete('/', [auth, ROLE('ADMIN')], async (req, res) => {
+  const { email } = req.body;
+
+  try {
+      let user = await User.findOne({ email });
+      if (!user) {
+          return res.status(404).json({ errors: [{ msg: 'No user with this email'}]});
+      }
+
+      user = await User.findOneAndRemove({ email });
+      return res.json({msg: `User with email ${email} deleted successfully`});
   } catch (error) {
       console.error(error.message);
       return res.status(500).send('Server error occurred');
