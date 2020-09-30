@@ -14,13 +14,45 @@ const router = express.Router();
 // @route    GET api/user
 // @desc     Get All User route
 // @access   Private
-router.get("/", [auth, ROLE('ADMIN')], async (req, res) => {
+router.get("/", [auth, ROLE("ADMIN")], async (req, res) => {
   try {
     const user = await User.find({ role: { $ne: "ADMIN" } }).select([
       "-_id",
       "-password",
     ]);
     return res.json(user);
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).json("Server error occurred");
+  }
+});
+
+// @route    GET api/user
+// @desc     Search users with name, email, or phone number
+// @access   Private
+router.get("/search", [auth, ROLE("ADMIN")], async (req, res) => {
+  try {
+    const { query_string, query_value } = req.body;
+    let queryObj = {};
+    if (query_string !== "" && query_value !== "") {
+      queryObj[query_string] = query_value;
+      console.log(queryObj);
+    }
+
+    // const user = await User.find(queryObj);
+    const user = await User.find({
+      $and: [{ role: { $ne: "ADMIN" } }, queryObj],
+    }).select(["-_id", "-password"]);
+    if (!user) {
+      return res.status(404).json({
+        errors: [
+          {
+            msg: `Cleint with the given ${search_field}:${search_value} not found`,
+          },
+        ],
+      });
+    }
+    return res.json({ user });
   } catch (error) {
     console.log(error.message);
     return res.status(500).json("Server error occurred");
@@ -102,24 +134,26 @@ router.post(
 // @desc     Update User Role route
 // @access   Private
 
-router.patch('/', [auth, ROLE('ADMIN')], async (req, res) => {
+router.patch("/", [auth, ROLE("ADMIN")], async (req, res) => {
   const { email, role } = req.body;
 
   try {
-      let user = await User.findOne({ email });
-      if (!user) {
-          return res.status(404).json({ errors: [{ msg: 'No user with this email'}]});
-      }
+    let user = await User.findOne({ email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ errors: [{ msg: "No user with this email" }] });
+    }
 
-      user = await User.findOneAndUpdate(
-          { email },
-          { $set: { role: role } },
-          { new: true }
-      );
-      return res.json(user);
+    user = await User.findOneAndUpdate(
+      { email },
+      { $set: { role: role } },
+      { new: true }
+    );
+    return res.json(user);
   } catch (error) {
-      console.error(error.message);
-      return res.status(500).send('Server error occurred');
+    console.error(error.message);
+    return res.status(500).send("Server error occurred");
   }
 });
 
@@ -127,20 +161,22 @@ router.patch('/', [auth, ROLE('ADMIN')], async (req, res) => {
 // @desc     Delete user with given email
 // @access   Private
 
-router.delete('/', [auth, ROLE('ADMIN')], async (req, res) => {
+router.delete("/", [auth, ROLE("ADMIN")], async (req, res) => {
   const { email } = req.body;
 
   try {
-      let user = await User.findOne({ email });
-      if (!user) {
-          return res.status(404).json({ errors: [{ msg: 'No user with this email'}]});
-      }
+    let user = await User.findOne({ email });
+    if (!user) {
+      return res
+        .status(404)
+        .json({ errors: [{ msg: "No user with this email" }] });
+    }
 
-      user = await User.findOneAndRemove({ email });
-      return res.json({msg: `User with email ${email} deleted successfully`});
+    user = await User.findOneAndRemove({ email });
+    return res.json({ msg: `User with email ${email} deleted successfully` });
   } catch (error) {
-      console.error(error.message);
-      return res.status(500).send('Server error occurred');
+    console.error(error.message);
+    return res.status(500).send("Server error occurred");
   }
 });
 
