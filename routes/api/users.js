@@ -19,7 +19,7 @@ router.get("/", [auth, ROLE("ADMIN")], async (req, res) => {
     const user = await User.find({ role: { $ne: "ADMIN" } }).select([
       "-_id",
       "-password",
-    ]);
+    ]).cache({ expire: 10 });
     return res.json(user);
   } catch (error) {
     console.log(error.message);

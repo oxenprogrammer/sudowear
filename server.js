@@ -5,6 +5,8 @@ const products = require('./routes/api/product');
 const {router, adminBro} = require('./routes/api/admin-bro');
 const connectDB = require('./config/db');
 
+require('./util/redis');
+
 const app = express();
 
 // Connect to DB
