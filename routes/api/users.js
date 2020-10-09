@@ -30,24 +30,31 @@ router.get("/", [auth, ROLE("ADMIN")], async (req, res) => {
 // @route    GET api/user
 // @desc     Search users with name, email, or phone number
 // @access   Private
-router.get("/search", [auth, ROLE("ADMIN")], async (req, res) => {
+router.post("/search", [auth, ROLE("ADMIN")], async (req, res) => {
+  const { query_value } = req.body;
+  if (!query_value) return res.status(400).json({
+    errors: [
+      {
+        msg: `Bad Request`,
+      },
+    ],
+  });
   try {
-    const { query_string, query_value } = req.body;
-    let queryObj = {};
-    if (query_string !== "" && query_value !== "") {
-      queryObj[query_string] = query_value;
-      console.log(queryObj);
-    }
-
-    // const user = await User.find(queryObj);
     const user = await User.find({
-      $and: [{ role: { $ne: "ADMIN" } }, queryObj],
+      $and: [{ role: { $ne: "ADMIN" } },
+      {
+        $or: [
+          { name: new RegExp(query_value, 'i') },
+          { email: new RegExp(query_value, 'i') },
+          { phone: new RegExp(query_value, 'i') }]
+      }
+      ],
     }).select(["-_id", "-password"]);
     if (!user) {
       return res.status(404).json({
         errors: [
           {
-            msg: `Cleint with the given ${search_field}:${search_value} not found`,
+            msg: `Cleint with the given ${query_value} not found`,
           },
         ],
       });
