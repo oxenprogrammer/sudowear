@@ -46,7 +46,7 @@ router.get("/", [auth, ROLE("ADMIN")], async (req, res) => {
         .cache({ expire: 10 });
     }
     
-    const total = await User.countDocuments();
+    const total = await User.countDocuments({ role: { $ne: "ADMIN" } });
     console.log('total', total);
 
     const pagination = {};
