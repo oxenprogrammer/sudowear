@@ -15,12 +15,46 @@ const router = express.Router();
 // @desc     Get All User route
 // @access   Private
 router.get("/", [auth, ROLE("ADMIN")], async (req, res) => {
+  const page = parseInt(req.query.page, 10) || 1; // getting the 'page' value
+  const limit = parseInt(req.query.limit, 10) || 25; // getting the 'limit' value
+  const startIndex = (page - 1) * limit;
+  const endIndex = page * limit;
+
   try {
-    const user = await User.find({ role: { $ne: "ADMIN" } }).select([
+    let user = await User.find({ role: { $ne: "ADMIN" } }).select([
       "-_id",
       "-password",
-    ]).cache({ expire: 10 });
-    return res.json(user);
+    ])
+    .skip(startIndex).limit(limit)
+    .cache({ expire: 10 });
+
+    const total = await User.countDocuments();
+    console.log('total', total);
+
+    const pagination = {};
+
+    if (endIndex < total) {
+      pagination.next = {
+        page: page + 1,
+        limit
+      }
+    }
+
+    if (startIndex > 0) {
+      pagination.prev = {
+        page: page - 1,
+        limit
+      }
+    }
+
+    const advancedResults = {
+      success: true,
+      count: user.length,
+      pagination,
+      data: user
+   }
+  // That's it. All we have to do now is send the `results` to the frontend.
+   res.status(200).json(advancedResults);
   } catch (error) {
     console.log(error.message);
     return res.status(500).json("Server error occurred");
