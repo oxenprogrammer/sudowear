@@ -17,17 +17,35 @@ const router = express.Router();
 router.get("/", [auth, ROLE("ADMIN")], async (req, res) => {
   const page = parseInt(req.query.page, 10) || 1; // getting the 'page' value
   const limit = parseInt(req.query.limit, 10) || 25; // getting the 'limit' value
+  const search = req.query.search;
   const startIndex = (page - 1) * limit;
   const endIndex = page * limit;
 
   try {
-    let user = await User.find({ role: { $ne: "ADMIN" } }).select([
-      "-_id",
-      "-password",
-    ])
-    .skip(startIndex).limit(limit)
-    .cache({ expire: 10 });
-
+    let user;
+    if (search) {
+      user = await User.find({
+        $and: [{ role: { $ne: "ADMIN" } },
+        {
+          $or: [
+            { name: new RegExp(search, 'i') },
+            { email: new RegExp(search, 'i') },
+            { phone: new RegExp(search, 'i') }]
+        }
+        ],
+      }).select(["-_id", "-password"])
+        .skip(startIndex).limit(limit)
+        .cache({ expire: 10 });
+      ;
+    } else {
+      user = await User.find({ role: { $ne: "ADMIN" } }).select([
+        "-_id",
+        "-password",
+      ])
+        .skip(startIndex).limit(limit)
+        .cache({ expire: 10 });
+    }
+    
     const total = await User.countDocuments();
     console.log('total', total);
 
@@ -52,47 +70,8 @@ router.get("/", [auth, ROLE("ADMIN")], async (req, res) => {
       count: user.length,
       pagination,
       data: user
-   }
-   res.status(200).json(results);
-  } catch (error) {
-    console.log(error.message);
-    return res.status(500).json("Server error occurred");
-  }
-});
-
-// @route    GET api/user
-// @desc     Search users with name, email, or phone number
-// @access   Private
-router.post("/search", [auth, ROLE("ADMIN")], async (req, res) => {
-  const { query_value } = req.body;
-  if (!query_value) return res.status(400).json({
-    errors: [
-      {
-        msg: `Bad Request`,
-      },
-    ],
-  });
-  try {
-    const user = await User.find({
-      $and: [{ role: { $ne: "ADMIN" } },
-      {
-        $or: [
-          { name: new RegExp(query_value, 'i') },
-          { email: new RegExp(query_value, 'i') },
-          { phone: new RegExp(query_value, 'i') }]
-      }
-      ],
-    }).select(["-_id", "-password"]);
-    if (!user) {
-      return res.status(404).json({
-        errors: [
-          {
-            msg: `Cleint with the given ${query_value} not found`,
-          },
-        ],
-      });
     }
-    return res.json({ user });
+    res.status(200).json(results);
   } catch (error) {
     console.log(error.message);
     return res.status(500).json("Server error occurred");
