@@ -47,14 +47,13 @@ router.get("/", [auth, ROLE("ADMIN")], async (req, res) => {
       }
     }
 
-    const advancedResults = {
+    const results = {
       success: true,
       count: user.length,
       pagination,
       data: user
    }
-  // That's it. All we have to do now is send the `results` to the frontend.
-   res.status(200).json(advancedResults);
+   res.status(200).json(results);
   } catch (error) {
     console.log(error.message);
     return res.status(500).json("Server error occurred");
