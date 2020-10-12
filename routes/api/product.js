@@ -7,8 +7,53 @@ const Product = require('./../../models/Product');
 
 const router = express.Router();
 
-router.get('/', (req, res) => {
-    return res.status(200).json({ 'get_product works': 'product' });
+router.get('/', async (req, res) => {
+    const page = parseInt(req.query.page, 10) || 1; // getting the 'page' value
+    const limit = parseInt(req.query.limit, 10) || 25; // getting the 'limit' value
+    const search = req.query.search || '';
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    try {
+        const tshirts = await Product.find({
+            $or: [
+                { title: new RegExp(search, 'i') },
+                { price: new RegExp(search, 'i') }
+            ]
+        })
+            .skip(startIndex)
+            .limit(limit)
+            .cache({ expire: 10 });
+
+        const total = await Product.countDocuments();
+        console.log('total', total);
+
+        const pagination = {};
+
+        if (endIndex < total) {
+            pagination.next = {
+                page: page + 1,
+                limit
+            }
+        }
+
+        if (startIndex > 0) {
+            pagination.prev = {
+                page: page - 1,
+                limit
+            }
+        }
+
+        const results = {
+            success: true,
+            count: tshirts.length,
+            pagination,
+            data: tshirts
+        }
+        res.status(200).json(results);
+    } catch (error) {
+        console.log(error.message);
+        return res.status(500).json("Server error occurred");
+    }
 });
 
 // desc
@@ -58,7 +103,7 @@ router.post('/', [upload.array('shirt_image', 4), [checkTitle, checkDesc, checkP
 
             await product.save();
             return res.status(201).json({ product });
-            
+
         } else if (req.file && req.file.path) {
             product['images'] = req.file.path;
             await product.save();
