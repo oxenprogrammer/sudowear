@@ -17,34 +17,23 @@ const router = express.Router();
 router.get("/", [auth, ROLE("ADMIN")], async (req, res) => {
   const page = parseInt(req.query.page, 10) || 1; // getting the 'page' value
   const limit = parseInt(req.query.limit, 10) || 25; // getting the 'limit' value
-  const search = req.query.search;
+  const search = req.query.search || '';
   const startIndex = (page - 1) * limit;
   const endIndex = page * limit;
 
   try {
-    let user;
-    if (search) {
-      user = await User.find({
-        $and: [{ role: { $ne: "ADMIN" } },
-        {
-          $or: [
-            { name: new RegExp(search, 'i') },
-            { email: new RegExp(search, 'i') },
-            { phone: new RegExp(search, 'i') }]
-        }
-        ],
-      }).select(["-_id", "-password"])
-        .skip(startIndex).limit(limit)
-        .cache({ expire: 10 });
-      ;
-    } else {
-      user = await User.find({ role: { $ne: "ADMIN" } }).select([
-        "-_id",
-        "-password",
-      ])
-        .skip(startIndex).limit(limit)
-        .cache({ expire: 10 });
-    }
+    const user = await User.find({
+      $and: [{ role: { $ne: "ADMIN" } },
+      {
+        $or: [
+          { name: new RegExp(search, 'i') },
+          { email: new RegExp(search, 'i') },
+          { phone: new RegExp(search, 'i') }]
+      }
+      ],
+    }).select(["-_id", "-password"])
+      .skip(startIndex).limit(limit)
+      .cache({ expire: 10 });
     
     const total = await User.countDocuments({ role: { $ne: "ADMIN" } });
     console.log('total', total);
