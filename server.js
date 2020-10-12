@@ -2,7 +2,7 @@ const express = require('express');
 const users = require('./routes/api/users');
 const auth = require('./routes/api/auth');
 const products = require('./routes/api/product');
-const {router, adminBro} = require('./routes/api/admin-bro');
+const { router, adminBro } = require('./routes/api/admin-bro');
 const connectDB = require('./config/db');
 
 require('./util/redis');
