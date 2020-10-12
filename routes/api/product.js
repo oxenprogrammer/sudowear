@@ -16,9 +16,10 @@ const checkTitle = check('title', 'T-Shirt title is required').not().isEmpty();
 const checkDesc = check('desc', 'Please provide the T-Shirt description').not().isEmpty();
 const checkPrice = check('price', 'Please enter the T-Shirt price').isNumeric();
 const checkQuantity = check('quantity', 'Please enter the number of T-Shirts').isNumeric();
-router.post('/', [ upload.single('shirt_image'), [checkTitle, checkDesc, checkPrice, checkQuantity], auth, ROLE('ADMIN')], async (req, res) => {
+router.post('/', [upload.array('shirt_image', 4), [checkTitle, checkDesc, checkPrice, checkQuantity], auth, ROLE('ADMIN')], async (req, res) => {
     // const shirtImage = typeof req.files['shirt_image'] !== "undefined" ? req.files['shirt_image'][0].filename : '';
     // req.checkBody('shirt_image', 'Please upload an image Jpeg, Png or Jpg').isImage(shirtImage);
+    console.log('req.files', req.files);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -37,21 +38,40 @@ router.post('/', [ upload.single('shirt_image'), [checkTitle, checkDesc, checkPr
                 ],
             });
         }
-        if (req.file && req.file.path) {
-            product = new Product({
-                title,
-                price,
-                desc,
-                quantity,
-                images: req.file.path
-            });
+
+        product = new Product({
+            title,
+            price,
+            desc,
+            quantity
+        });
+
+        if (req.files) {
+            const imageURIs = [];
+            const files = req.files;
+            for (const file of files) {
+                const { path } = file;
+                imageURIs.push(path);
+            };
+
+            product['images'] = imageURIs;
 
             await product.save();
-
             return res.status(201).json({ product });
-        }
-        console.log('Things failed!!!!!!');
-        return;
+            
+        } else if (req.file && req.file.path) {
+            product['images'] = req.file.path;
+            await product.save();
+            return res.status(201).json({ product });
+        };
+
+        return res.status(400).json({
+            errors: [
+                {
+                    msg: `Please upload an image`,
+                },
+            ],
+        });
     } catch (error) {
         console.error("server error occurred", error.message);
         return res.status(500).send("Server Error Occurred");
