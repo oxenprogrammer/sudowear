@@ -124,9 +124,9 @@ router.post('/', [upload.array('shirt_image', 4), [checkTitle, checkDesc, checkP
     }
 });
 
-router.patch('/:id',[auth, ROLE('ADMIN')], async (req, res) => {
+router.patch('/:id', [auth, ROLE('ADMIN')], async (req, res) => {
     const id = req.params.id;
-    const { quantity, price, isAvailable , title, desc } = req.body;
+    const { quantity, price, isAvailable, title, desc } = req.body;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({
@@ -149,7 +149,7 @@ router.patch('/:id',[auth, ROLE('ADMIN')], async (req, res) => {
     }
 
     try {
-        const tShirt = await Product.findByIdAndUpdate(id, { $set:req.body }, { new:true });
+        const tShirt = await Product.findByIdAndUpdate(id, { $set: req.body }, { new: true });
         if (!tShirt) {
             return res.status(404).json({
                 errors: [
@@ -165,6 +165,33 @@ router.patch('/:id',[auth, ROLE('ADMIN')], async (req, res) => {
     } catch (error) {
         console.error("server error occurred", error.message);
         return res.status(500).send("Server Error Occurred");
+    }
+});
+
+router.delete("/", [auth, ROLE("ADMIN")], async (req, res) => {
+    const { title } = req.body;
+
+    if (!title) {
+        return res.status(400).json({
+            errors: [
+                {
+                    msg: `Please provide the title for the tee to be deleted`,
+                },
+            ]
+        });
+    }
+
+    try {
+        const tshirt = await Product.findOneAndRemove({ title });
+        if (!tshirt) {
+            return res
+                .status(400)
+                .json({ errors: [{ msg: `Something went wrong, tshirt not deleted` }] });
+        }
+        return res.json({ msg: `T-Shirt labelled ${title} deleted successfully` });
+    } catch (error) {
+        console.error(error.message);
+        return res.status(500).send("Server error occurred");
     }
 });
 
