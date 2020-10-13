@@ -4,6 +4,7 @@ const upload = require('./../../middlewares/upload');
 const auth = require('./../../middlewares/auth');
 const ROLE = require('./../../middlewares/roles');
 const Product = require('./../../models/Product');
+const mongoose = require('mongoose');
 
 const router = express.Router();
 
@@ -117,6 +118,50 @@ router.post('/', [upload.array('shirt_image', 4), [checkTitle, checkDesc, checkP
                 },
             ],
         });
+    } catch (error) {
+        console.error("server error occurred", error.message);
+        return res.status(500).send("Server Error Occurred");
+    }
+});
+
+router.patch('/:id',[auth, ROLE('ADMIN')], async (req, res) => {
+    const id = req.params.id;
+    const { quantity, price, isAvailable , title, desc } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+            errors: [
+                {
+                    msg: `Please provide a valid ObjectId`,
+                },
+            ]
+        });
+    };
+
+    if (!quantity || !price || !isAvailable || !title || !desc) {
+        return res.status(400).json({
+            errors: [
+                {
+                    msg: `Please provide the t-Shirt properties to update`,
+                },
+            ]
+        });
+    }
+
+    try {
+        const tShirt = await Product.findByIdAndUpdate(id, { $set:req.body }, { new:true });
+        if (!tShirt) {
+            return res.status(404).json({
+                errors: [
+                    {
+                        msg: `Couldn't update the tShirt`,
+                    },
+                ]
+            });
+        }
+
+        return res.status(200).json({ tShirt });
+
     } catch (error) {
         console.error("server error occurred", error.message);
         return res.status(500).send("Server Error Occurred");

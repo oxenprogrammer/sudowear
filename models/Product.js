@@ -22,7 +22,10 @@ const ProductSchema = new mongoose.Schema({
         type: String,
         required: true
     }],
-
+    isAvailable: {
+        type: Boolean,
+        default: true
+    },
     added: {
         type: Date,
         default: Date.now
