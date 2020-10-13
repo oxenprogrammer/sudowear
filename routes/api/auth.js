@@ -1,7 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const _ = require('lodash');
+const _ = require("lodash");
 const router = express.Router();
 const { check, validationResult } = require("express-validator");
 const User = require("./../../models/User");
@@ -99,8 +99,8 @@ router.post("/admin", [checkEmail, [auth, ROLE("ADMIN")]], async (req, res) => {
       }
     );
   } catch (error) {
-    console.error('Server Error Occurrd', error.message);
-    return res.status(500).send('Server Error Occurred');
+    console.error("Server Error Occurrd", error.message);
+    return res.status(500).send("Server Error Occurred");
   }
 });
 

@@ -17,49 +17,53 @@ const router = express.Router();
 router.get("/", [auth, ROLE("ADMIN")], async (req, res) => {
   const page = parseInt(req.query.page, 10) || 1; // getting the 'page' value
   const limit = parseInt(req.query.limit, 10) || 25; // getting the 'limit' value
-  const search = req.query.search || '';
+  const search = req.query.search || "";
   const startIndex = (page - 1) * limit;
   const endIndex = page * limit;
 
   try {
     const user = await User.find({
-      $and: [{ role: { $ne: "ADMIN" } },
-      {
-        $or: [
-          { name: new RegExp(search, 'i') },
-          { email: new RegExp(search, 'i') },
-          { phone: new RegExp(search, 'i') }]
-      }
+      $and: [
+        { role: { $ne: "ADMIN" } },
+        {
+          $or: [
+            { name: new RegExp(search, "i") },
+            { email: new RegExp(search, "i") },
+            { phone: new RegExp(search, "i") },
+          ],
+        },
       ],
-    }).select(["-_id", "-password"])
-      .skip(startIndex).limit(limit)
+    })
+      .select(["-_id", "-password"])
+      .skip(startIndex)
+      .limit(limit)
       .cache({ expire: 10 });
-    
+
     const total = await User.countDocuments({ role: { $ne: "ADMIN" } });
-    console.log('total', total);
+    console.log("total", total);
 
     const pagination = {};
 
     if (endIndex < total) {
       pagination.next = {
         page: page + 1,
-        limit
-      }
+        limit,
+      };
     }
 
     if (startIndex > 0) {
       pagination.prev = {
         page: page - 1,
-        limit
-      }
+        limit,
+      };
     }
 
     const results = {
       success: true,
       count: user.length,
       pagination,
-      data: user
-    }
+      data: user,
+    };
     res.status(200).json(results);
   } catch (error) {
     console.log(error.message);
@@ -67,27 +71,27 @@ router.get("/", [auth, ROLE("ADMIN")], async (req, res) => {
   }
 });
 
-router.get('/profile', auth, async (req, res) => {
-  console.log('req.user', req.user);
+router.get("/profile", auth, async (req, res) => {
+  console.log("req.user", req.user);
   const id = req.user.id;
-  console.log('id', id);
+  console.log("id", id);
   try {
     const user = await User.findById(id);
     if (!user) {
       return res.status(400).json({
         errors: [
-            {
-              msg: `User profile not found`,
-            },
-        ]
-    });
-    };
+          {
+            msg: `User profile not found`,
+          },
+        ],
+      });
+    }
     return res.status(200).json({ user });
   } catch (error) {
     console.error("server error occurred", error.message);
     return res.status(500).send("Server Error Occurred");
   }
-  return res.status(200).send('found');
+  return res.status(200).send("found");
 });
 
 // @route POST api/user
@@ -196,20 +200,24 @@ router.delete("/", [auth, ROLE("ADMIN")], async (req, res) => {
   const { email } = req.body;
   if (!email) {
     return res.status(400).json({
-        errors: [
-            {
-                msg: `Please provide the email for the user to be deleted`,
-            },
-        ]
+      errors: [
+        {
+          msg: `Please provide the email for the user to be deleted`,
+        },
+      ],
     });
-}
+  }
 
   try {
     const user = await User.findOneAndRemove({ email });
     if (!user) {
-      return res
-        .status(400)
-        .json({ errors: [{ msg: `Something went wrong, user with email ${email} not deleted` }] });
+      return res.status(400).json({
+        errors: [
+          {
+            msg: `Something went wrong, user with email ${email} not deleted`,
+          },
+        ],
+      });
     }
     return res.json({ msg: `User with email ${email} deleted successfully` });
   } catch (error) {
