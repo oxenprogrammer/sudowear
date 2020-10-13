@@ -67,6 +67,29 @@ router.get("/", [auth, ROLE("ADMIN")], async (req, res) => {
   }
 });
 
+router.get('/profile', auth, async (req, res) => {
+  console.log('req.user', req.user);
+  const id = req.user.id;
+  console.log('id', id);
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(400).json({
+        errors: [
+            {
+              msg: `User profile not found`,
+            },
+        ]
+    });
+    };
+    return res.status(200).json({ user });
+  } catch (error) {
+    console.error("server error occurred", error.message);
+    return res.status(500).send("Server Error Occurred");
+  }
+  return res.status(200).send('found');
+});
+
 // @route POST api/user
 // @desc Register new USER route
 // @access Public
