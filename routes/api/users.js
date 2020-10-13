@@ -146,18 +146,18 @@ router.patch("/", [auth, ROLE("ADMIN")], async (req, res) => {
   const { email, role } = req.body;
 
   try {
-    let user = await User.findOne({ email });
-    if (!user) {
-      return res
-        .status(404)
-        .json({ errors: [{ msg: "No user with this email" }] });
-    }
-
-    user = await User.findOneAndUpdate(
+    const user = await User.findOneAndUpdate(
       { email },
       { $set: { role: role } },
       { new: true }
     );
+
+    if (!user) {
+      return res
+        .status(400)
+        .json({ errors: [{ msg: "Something went wrong, user not updated" }] });
+    }
+
     return res.json(user);
   } catch (error) {
     console.error(error.message);
