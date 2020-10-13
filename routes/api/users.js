@@ -173,14 +173,12 @@ router.delete("/", [auth, ROLE("ADMIN")], async (req, res) => {
   const { email } = req.body;
 
   try {
-    let user = await User.findOne({ email });
+    const user = await User.findOneAndRemove({ email });
     if (!user) {
       return res
-        .status(404)
-        .json({ errors: [{ msg: "No user with this email" }] });
+        .status(400)
+        .json({ errors: [{ msg: `Something went wrong, user with email ${email} not deleted` }] });
     }
-
-    user = await User.findOneAndRemove({ email });
     return res.json({ msg: `User with email ${email} deleted successfully` });
   } catch (error) {
     console.error(error.message);
