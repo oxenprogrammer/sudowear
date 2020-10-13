@@ -57,6 +57,32 @@ router.get('/', async (req, res) => {
     }
 });
 
+router.get('/:id', async (req, res) => {
+    const id = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({
+            errors: [
+                {
+                    msg: `Invalid T-Shirt ID`,
+                },
+            ]
+        });
+    };
+    const tShirt = await Product.findById(id).cache({ expire: 10 });;
+    if (!tShirt) {
+        return res.status(404).json({
+            errors: [
+                {
+                    msg: `T-Shirt not found`,
+                },
+            ]
+        });
+    }
+
+    return res.status(200).json({ tShirt });
+
+});
+
 // desc
 const checkTitle = check('title', 'T-Shirt title is required').not().isEmpty();
 const checkDesc = check('desc', 'Please provide the T-Shirt description').not().isEmpty();
