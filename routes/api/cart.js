@@ -1,6 +1,6 @@
 const express = require("express");
 const { check, validationResult } = require("express-validator");
-const Router = express.Router();
+const router = express.Router();
 
 const User = require("./../../models/User");
 const auth = require("./../../middlewares/auth");
@@ -17,7 +17,7 @@ const checkQuantity = check(
   "quantity",
   "Please specify the number of T-Shirts"
 ).isNumeric();
-Router.post("/:id", [[checkItem, checkQuantity], auth], async (req, res) => {
+router.post("/:id", [[checkItem, checkQuantity], auth], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
@@ -53,4 +53,48 @@ Router.post("/:id", [[checkItem, checkQuantity], auth], async (req, res) => {
   }
 });
 
-module.exports = Router;
+router.put("/:id", [auth], async (req, res) => {
+  const userId = req.user.id;
+  const paramId = req.params.id;
+  if (paramId !== userId) {
+    return res.status(403).json({
+      errors: [
+        {
+          msg: `Unauthorized Operation. FORBIDDEN`,
+        },
+      ],
+    });
+  }
+
+  try {
+    let user = await User.findById(paramId);
+
+    let quantity = req.query.quantity / 1 || 1;
+    let foundItem = -1;
+
+    for (const [index, item] of user.cart.entries()) {
+      console.log("%d: %s", index, item);
+      if (item.item.toString() === req.query.itemId) {
+        console.log("match found");
+        foundItem = index;
+        console.log("foundItem", foundItem);
+      }
+    }
+
+    if (foundItem >= 0) {
+      console.log("Found Item = " + foundItem);
+      if (quantity === 0) {
+        user.cart.splice(foundItem, 1);
+      } else {
+        user.cart[foundItem].quantity = quantity;
+      }
+    }
+    await user.save();
+    return res.json({ user });
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).send("Server error occurred");
+  }
+});
+
+module.exports = router;
