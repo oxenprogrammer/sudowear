@@ -62,7 +62,6 @@ router.post("/", [checkEmail, checkPassword], async (req, res) => {
       }
     );
   } catch (error) {
-    console.error("Server Error Occurred", error.mesage);
     return res.status(500).send("Server Error Occurred");
   }
 });
@@ -99,7 +98,6 @@ router.post("/admin", [checkEmail, [auth, ROLE("ADMIN")]], async (req, res) => {
       }
     );
   } catch (error) {
-    console.error("Server Error Occurrd", error.message);
     return res.status(500).send("Server Error Occurred");
   }
 });

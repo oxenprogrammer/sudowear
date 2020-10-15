@@ -6,6 +6,8 @@ const User = require("./../../models/User");
 const Product = require("./../../models/Product");
 const auth = require("./../../middlewares/auth");
 const ROLE = require("./../../middlewares/roles");
+require("dotenv").config();
+
 // add order
 router.post("/", [auth], async (req, res) => {
   const userId = req.user.id;
@@ -24,7 +26,6 @@ router.post("/", [auth], async (req, res) => {
       const price = parseInt(products["price"], 10) * quantity;
       products["price"] = price;
       totalPrice = totalPrice + price;
-      console.log("products", products);
       order.products = products;
       orders.push(order);
     }
@@ -47,7 +48,6 @@ router.post("/", [auth], async (req, res) => {
 
     return res.status(201).json({ newOrder });
   } catch (error) {
-    console.error(error.message);
     return res.status(500).send("Server error occurred");
   }
 });
@@ -56,10 +56,9 @@ router.post("/", [auth], async (req, res) => {
 router.get("/", [auth], async (req, res) => {
   const userId = req.user.id;
   try {
-    const order = await Order.find({ userId });
+    const order = await Order.find({ userId }).cache({ expire: 10 });
     return res.status(200).json({ order });
   } catch (error) {
-    console.error(error.message);
     return res.status(500).send("Server error occurred");
   }
 });
@@ -67,16 +66,14 @@ router.get("/", [auth], async (req, res) => {
 // get your own order
 router.get("/all", [auth, ROLE("ADMIN")], async (req, res) => {
   try {
-    const orders = await Order.find();
+    const orders = await Order.find().cache({ expire: 10 });
     let total = 0;
     for (let order of orders) {
-      console.log("order", order);
       const { totalPrice } = order;
       total = total + totalPrice;
     }
     return res.status(200).json({ orders, grandTotalPrice: total });
   } catch (error) {
-    console.error(error.message);
     return res.status(500).send("Server error occurred");
   }
 });

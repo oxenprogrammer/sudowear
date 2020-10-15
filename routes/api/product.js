@@ -26,8 +26,7 @@ router.get("/", async (req, res) => {
       .cache({ expire: 10 });
 
     const total = await Product.countDocuments();
-    console.log("total", total);
-
+  
     const pagination = {};
 
     if (endIndex < total) {
@@ -52,7 +51,6 @@ router.get("/", async (req, res) => {
     };
     res.status(200).json(results);
   } catch (error) {
-    console.log(error.message);
     return res.status(500).json("Server error occurred");
   }
 });
@@ -103,7 +101,6 @@ router.post(
   async (req, res) => {
     // const shirtImage = typeof req.files['shirt_image'] !== "undefined" ? req.files['shirt_image'][0].filename : '';
     // req.checkBody('shirt_image', 'Please upload an image Jpeg, Png or Jpg').isImage(shirtImage);
-    console.log("req.files", req.files);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
@@ -156,7 +153,6 @@ router.post(
         ],
       });
     } catch (error) {
-      console.error("server error occurred", error.message);
       return res.status(500).send("Server Error Occurred");
     }
   }
@@ -204,7 +200,6 @@ router.patch("/:id", [auth, ROLE("ADMIN")], async (req, res) => {
 
     return res.status(200).json({ tShirt });
   } catch (error) {
-    console.error("server error occurred", error.message);
     return res.status(500).send("Server Error Occurred");
   }
 });
@@ -231,7 +226,6 @@ router.delete("/", [auth, ROLE("ADMIN")], async (req, res) => {
     }
     return res.json({ msg: `T-Shirt labelled ${title} deleted successfully` });
   } catch (error) {
-    console.error(error.message);
     return res.status(500).send("Server error occurred");
   }
 });

@@ -40,7 +40,6 @@ router.get("/", [auth, ROLE("ADMIN")], async (req, res) => {
       .cache({ expire: 10 });
 
     const total = await User.countDocuments({ role: { $ne: "ADMIN" } });
-    console.log("total", total);
 
     const pagination = {};
 
@@ -66,15 +65,12 @@ router.get("/", [auth, ROLE("ADMIN")], async (req, res) => {
     };
     res.status(200).json(results);
   } catch (error) {
-    console.log(error.message);
     return res.status(500).json("Server error occurred");
   }
 });
 
 router.get("/profile", auth, async (req, res) => {
-  console.log("req.user", req.user);
   const id = req.user.id;
-  console.log("id", id);
   try {
     const user = await User.findById(id);
     if (!user) {
@@ -88,7 +84,6 @@ router.get("/profile", auth, async (req, res) => {
     }
     return res.status(200).json({ user });
   } catch (error) {
-    console.error("server error occurred", error.message);
     return res.status(500).send("Server Error Occurred");
   }
   return res.status(200).send("found");
@@ -159,7 +154,6 @@ router.post(
         }
       );
     } catch (error) {
-      console.error("server error occurred", error.message);
       return res.status(500).send("Server Error Occurred");
     }
   }
@@ -187,7 +181,6 @@ router.patch("/", [auth, ROLE("ADMIN")], async (req, res) => {
 
     return res.json(user);
   } catch (error) {
-    console.error(error.message);
     return res.status(500).send("Server error occurred");
   }
 });
@@ -221,7 +214,6 @@ router.delete("/", [auth, ROLE("ADMIN")], async (req, res) => {
     }
     return res.json({ msg: `User with email ${email} deleted successfully` });
   } catch (error) {
-    console.error(error.message);
     return res.status(500).send("Server error occurred");
   }
 });
