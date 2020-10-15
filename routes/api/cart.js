@@ -3,7 +3,9 @@ const { check, validationResult } = require("express-validator");
 const router = express.Router();
 
 const User = require("./../../models/User");
+const Product = require('./../../models/Product');
 const auth = require("./../../middlewares/auth");
+
 
 // @route    POST api/cart/:id
 // @desc     Add to Cart route
@@ -53,6 +55,9 @@ router.post("/:id", [[checkItem, checkQuantity], auth], async (req, res) => {
   }
 });
 
+// @route    PUT api/cart/:id?itemId=string&quantity=number
+// @desc     Add to Cart route
+// @access   Private
 router.put("/:id", [auth], async (req, res) => {
   const userId = req.user.id;
   const paramId = req.params.id;
@@ -91,6 +96,42 @@ router.put("/:id", [auth], async (req, res) => {
     }
     await user.save();
     return res.json({ user });
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).send("Server error occurred");
+  }
+});
+
+// @route    GET api/cart/:id
+// @desc     Get from Cart route
+// @access   Private
+router.get("/:id", [auth], async (req, res) => {
+  const userId = req.user.id;
+  const paramId = req.params.id;
+  if (paramId !== userId) {
+    return res.status(403).json({
+      errors: [
+        {
+          msg: `Unauthorized Operation. FORBIDDEN`,
+        },
+      ],
+    });
+  }
+  try {
+    const user = await User.findById(paramId);
+    let carts = [];
+    let products = user.cart;
+    for (let [index, product] of products.entries()) {
+      console.log('forloop product', product);
+      const { item, quantity } = product;
+      const cart = await Product.findById(item);
+      cart['quantity'] = quantity;
+      cart['price'] = parseInt(cart['price'], 10) * quantity;
+      carts.push(cart);
+    }
+
+    return res.json({ carts });
+  
   } catch (error) {
     console.error(error.message);
     return res.status(500).send("Server error occurred");
