@@ -35,7 +35,7 @@ const UserSchema = new mongoose.Schema({
     default: Date.now,
   },
   cart: [cart],
-  order: [],
+  orders: [],
 });
 
 module.exports = User = mongoose.model("user", UserSchema);
