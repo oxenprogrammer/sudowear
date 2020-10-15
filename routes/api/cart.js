@@ -121,7 +121,7 @@ router.get("/:id", [auth], async (req, res) => {
     const user = await User.findById(paramId).cache({ expire: 10 });;
     let carts = [];
     let products = user.cart;
-    for (let [index, product] of products.entries()) { 
+    for (let product of products) { 
       const { item, quantity } = product;
       const cart = await Product.findById(item).cache({ expire: 10 });;
       cart['quantity'] = quantity;
