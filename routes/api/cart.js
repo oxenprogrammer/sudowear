@@ -118,13 +118,12 @@ router.get("/:id", [auth], async (req, res) => {
     });
   }
   try {
-    const user = await User.findById(paramId);
+    const user = await User.findById(paramId).cache({ expire: 10 });;
     let carts = [];
     let products = user.cart;
-    for (let [index, product] of products.entries()) {
-      console.log('forloop product', product);
+    for (let [index, product] of products.entries()) { 
       const { item, quantity } = product;
-      const cart = await Product.findById(item);
+      const cart = await Product.findById(item).cache({ expire: 10 });;
       cart['quantity'] = quantity;
       cart['price'] = parseInt(cart['price'], 10) * quantity;
       carts.push(cart);
