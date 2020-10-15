@@ -1,11 +1,11 @@
 const express = require("express");
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const router = express.Router();
 const Order = require("./../../models/Order");
 const User = require("./../../models/User");
 const Product = require("./../../models/Product");
 const auth = require("./../../middlewares/auth");
-
+const ROLE = require("./../../middlewares/roles");
 // add order
 router.post("/", [auth], async (req, res) => {
   const userId = req.user.id;
@@ -16,36 +16,65 @@ router.post("/", [auth], async (req, res) => {
     let orders = [];
     let carts = user.cart;
     let totalPrice = 0;
-    
+
     for (let cart of carts) {
       const { item, quantity } = cart;
       let products = await Product.findById(item);
-      products['quantity'] = quantity;
-      const price = parseInt(products['price'], 10) * quantity;
-      products['price'] = price;
+      products["quantity"] = quantity;
+      const price = parseInt(products["price"], 10) * quantity;
+      products["price"] = price;
       totalPrice = totalPrice + price;
       console.log("products", products);
       order.products = products;
       orders.push(order);
     }
-    
+
     let newOrder = new Order({
-        products: orders,
-        totalPrice,
-        userId
+      products: orders,
+      totalPrice,
+      userId,
     });
-     // save order to db
+    // save order to db
     await newOrder.save();
 
-     // empty the cart
-     user.cart = [];
+    // empty the cart
+    user.cart = [];
 
-     // add user order to their order property
-    const orderid = user['orders'] = mongoose.Types.ObjectId(newOrder._id);
-    user.update({$push: {orders: orderid }});
+    // add user order to their order property
+    const orderid = (user["orders"] = mongoose.Types.ObjectId(newOrder._id));
+    user.update({ $push: { orders: orderid } });
     await user.save();
 
     return res.status(201).json({ newOrder });
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).send("Server error occurred");
+  }
+});
+
+// get your own order
+router.get("/", [auth], async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const order = await Order.find({ userId });
+    return res.status(200).json({ order });
+  } catch (error) {
+    console.error(error.message);
+    return res.status(500).send("Server error occurred");
+  }
+});
+
+// get your own order
+router.get("/all", [auth, ROLE("ADMIN")], async (req, res) => {
+  try {
+    const orders = await Order.find();
+    let total = 0;
+    for (let order of orders) {
+      console.log("order", order);
+      const { totalPrice } = order;
+      total = total + totalPrice;
+    }
+    return res.status(200).json({ orders, grandTotalPrice: total });
   } catch (error) {
     console.error(error.message);
     return res.status(500).send("Server error occurred");
